@@ -10,7 +10,21 @@ function initDB() {
   request.onupgradeneeded = (e) => {
     db = e.target.result;
     if (!db.objectStoreNames.contains(STORE_NAME)) {
-      db.createObjectStore(STORE_NAME, { keyPath: 'username' });
+      const store = db.createObjectStore(STORE_NAME, { keyPath: 'username' });
+      store.transaction.oncomplete = () => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const users = tx.objectStore(STORE_NAME);
+        users.put({
+          username: 'admin',
+          password: 'admin123',
+          balance: 0,
+          theme: 'light',
+          avatar: '',
+          mobile: '',
+          transactions: [],
+          messages: []
+        });
+      };
     }
   };
 
