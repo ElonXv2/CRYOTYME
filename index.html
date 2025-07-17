@@ -15,7 +15,6 @@
 
   <button id="dark-toggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
 
-  <!-- LOGIN -->
   <div id="login-screen" class="screen">
     <h1>Login</h1>
     <input type="text" id="username" placeholder="Username" />
@@ -28,27 +27,25 @@
     <p id="login-error" class="error"></p>
   </div>
 
-  <!-- REGISTER -->
   <div id="register-screen" class="screen hidden">
-    <h1>Register</h1>
-    <input type="text" id="reg-username" placeholder="Username" />
-    <input type="password" id="reg-password" placeholder="Password" />
-    <input type="password" id="reg-pin" placeholder="4-digit PIN" />
-    <input type="number" id="reg-deposit" placeholder="Initial Deposit" />
-    <input type="text" id="reg-mobile" placeholder="Mobile Number" />
-    <input type="file" id="reg-avatar" accept="image/*" />
-    <select id="reg-theme">
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
-      <option value="ocean">Ocean</option>
-      <option value="sunset">Sunset</option>
-    </select>
-    <button onclick="register()">Register</button>
-    <p class="small-link"><a href="#" onclick="showLogin()">← Back to Login</a></p>
-    <p id="register-error" class="error"></p>
-  </div>
+  <h1>Register</h1>
+  <input type="text" id="reg-username" placeholder="Username" />
+  <input type="password" id="reg-password" placeholder="Password" />
+  <input type="password" id="reg-pin" placeholder="4-digit PIN" />
+  <input type="text" id="reg-mobile" placeholder="Mobile Number" />
+  <input type="file" id="reg-avatar" accept="image/*" />
+  <select id="reg-theme">
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+    <option value="ocean">Ocean</option>
+    <option value="sunset">Sunset</option>
+    <option value="forest">Forest</option>  <option value="gold">Gold</option>      </select>
+  <button onclick="register()">Register</button>
+  <p class="small-link"><a href="#" onclick="showLogin()">← Back to Login</a></p>
+  <p id="register-error" class="error"></p>
+</div>
+     
 
-  <!-- RESET PIN -->
   <div id="reset-screen" class="screen hidden">
     <h1>Reset PIN</h1>
     <input type="text" id="reset-username" placeholder="Username" />
@@ -59,7 +56,6 @@
     <p id="reset-error" class="error"></p>
   </div>
 
-  <!-- DASHBOARD -->
   <div id="dashboard-screen" class="screen hidden">
     <header>
       <div class="avatar">
@@ -72,6 +68,13 @@
     <section class="balance">
       <h3>Account Balance</h3>
       <p>$<span id="balance">0.00</span></p>
+    </section>
+
+    <section class="profile-details">
+      <h3>Your Profile</h3>
+      <p><strong>Username:</strong> <span id="profile-username"></span></p>
+      <p><strong>Mobile:</strong> <span id="profile-mobile"></span></p>
+      <p><strong>Theme:</strong> <span id="profile-theme"></span></p>
     </section>
 
     <section class="transfer">
@@ -93,13 +96,23 @@
       <h3>Balance Over Time</h3>
       <canvas id="balance-chart" width="100%" height="100"></canvas>
     </section>
+
+    <section class="message-admin">
+      <h3>Message Admin</h3>
+      <textarea id="admin-message" placeholder="Type your message here..."></textarea>
+      <button onclick="sendMessageToAdmin()">Send Message</button>
+      <p id="admin-message-status" class="info"></p>
+    </section>
   </div>
 
-  <!-- ADMIN VIEW -->
   <div id="admin-screen" class="screen hidden">
     <h2>Admin Panel</h2>
     <button onclick="logout()">Logout</button>
     <div id="admin-users"></div>
+    <div id="admin-messages">
+      <h3>User Messages</h3>
+      <ul id="message-list"></ul>
+    </div>
   </div>
 
   <div class="promo">
