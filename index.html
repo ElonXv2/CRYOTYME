@@ -1,125 +1,135 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3498db">
   <title>Mobile Banking App</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="indexeddb.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
 <body class="light-mode">
-
   <div class="logo">
     <img src="logo.png" alt="Bank Logo">
   </div>
-
-  <button id="dark-toggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
-
   <div id="login-screen" class="screen">
-    <h1>Login</h1>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
-    <p class="small-link">
-      <a href="#" onclick="showRegister()">Create account</a> |
-      <a href="#" onclick="showReset()">Forgot PIN?</a>
-    </p>
-    <p id="login-error" class="error"></p>
+    <p class="error" id="login-error"></p>
+    <p class="small-link"><a href="#" onclick="showRegister()">Create account</a> | <a href="#" onclick="showReset()">Forgot PIN?</a></p>
   </div>
 
   <div id="register-screen" class="screen hidden">
-  <h1>Register</h1>
-  <input type="text" id="reg-username" placeholder="Username" />
-  <input type="password" id="reg-password" placeholder="Password" />
-  <input type="password" id="reg-pin" placeholder="4-digit PIN" />
-  <input type="text" id="reg-mobile" placeholder="Mobile Number" />
-  <input type="file" id="reg-avatar" accept="image/*" />
-  <select id="reg-theme">
-    <option value="light">Light</option>
-    <option value="dark">Dark</option>
-    <option value="ocean">Ocean</option>
-    <option value="sunset">Sunset</option>
-    <option value="forest">Forest</option>  <option value="gold">Gold</option>      </select>
-  <button onclick="register()">Register</button>
-  <p class="small-link"><a href="#" onclick="showLogin()">← Back to Login</a></p>
-  <p id="register-error" class="error"></p>
-</div>
-     
+    <h2>Register</h2>
+    <input type="text" id="reg-username" placeholder="Username">
+    <input type="password" id="reg-password" placeholder="Password">
+    <input type="text" id="reg-pin" placeholder="PIN">
+    <input type="text" id="reg-mobile" placeholder="Mobile Number">
+    <input type="file" id="reg-avatar" accept="image/*">
+    <select id="reg-theme">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+      <option value="ocean">Ocean</option>
+      <option value="sunset">Sunset</option>
+      <option value="forest">Forest</option>
+      <option value="gold">Gold</option>
+    </select>
+    <button onclick="register()">Register</button>
+    <p class="error" id="register-error"></p>
+    <p class="small-link"><a href="#" onclick="showLogin()">← Back to Login</a></p>
+  </div>
 
   <div id="reset-screen" class="screen hidden">
-    <h1>Reset PIN</h1>
-    <input type="text" id="reset-username" placeholder="Username" />
-    <input type="password" id="reset-password" placeholder="Password" />
-    <input type="password" id="new-pin" placeholder="New 4-digit PIN" />
+    <h2>Reset PIN</h2>
+    <input type="text" id="reset-username" placeholder="Username">
+    <input type="password" id="reset-password" placeholder="Password">
+    <input type="text" id="new-pin" placeholder="New PIN">
     <button onclick="resetPin()">Reset PIN</button>
+    <p class="error" id="reset-error"></p>
     <p class="small-link"><a href="#" onclick="showLogin()">← Back to Login</a></p>
-    <p id="reset-error" class="error"></p>
   </div>
 
   <div id="dashboard-screen" class="screen hidden">
-    <header>
-      <div class="avatar">
-        <img id="user-avatar" src="" alt="Profile Picture" />
-      </div>
-      <h2>Hello, <span id="user-name">User</span></h2>
-      <button class="logout-btn" onclick="logout()">Logout</button>
-    </header>
-
-    <section class="balance">
-      <h3>Account Balance</h3>
-      <p>$<span id="balance">0.00</span></p>
-    </section>
-
-    <section class="profile-details">
-      <h3>Your Profile</h3>
-      <p><strong>Username:</strong> <span id="profile-username"></span></p>
-      <p><strong>Mobile:</strong> <span id="profile-mobile"></span></p>
-      <p><strong>Theme:</strong> <span id="profile-theme"></span></p>
-    </section>
-
-    <section class="transfer">
-      <h3>Transfer Money</h3>
-      <input type="text" id="recipient" placeholder="Recipient Name">
-      <input type="number" id="amount" placeholder="Amount">
-      <input type="password" id="pin" placeholder="Enter PIN">
-      <button onclick="transferMoney()">Send</button>
-      <p id="transfer-error" class="error"></p>
-      <p id="sms-alert" class="info"></p>
-    </section>
-
-    <section class="transactions">
-      <h3>Recent Transactions</h3>
-      <ul id="transaction-list"></ul>
-    </section>
-
-    <section class="chart">
-      <h3>Balance Over Time</h3>
-      <canvas id="balance-chart" width="100%" height="100"></canvas>
-    </section>
-
-    <section class="message-admin">
-      <h3>Message Admin</h3>
-      <textarea id="admin-message" placeholder="Type your message here..."></textarea>
-      <button onclick="sendMessageToAdmin()">Send Message</button>
-      <p id="admin-message-status" class="info"></p>
-    </section>
+    <h2>Hello, <span id="user-name">User</span></h2>
+    <button onclick="logout()">Logout</button>
+    <div class="avatar"><img id="user-avatar" src="" alt="User Avatar"></div>
+    <h3>Account Balance</h3>
+    <p id="balance">$0.00</p>
+    <h3>Your Profile</h3>
+    <p>Username: <span id="profile-username"></span></p>
+    <p>Mobile: <span id="profile-mobile"></span></p>
+    <p>Theme: <span id="profile-theme"></span></p>
+    <h3>Transfer Money</h3>
+    <input type="text" id="recipient" placeholder="Recipient Username">
+    <input type="number" id="amount" placeholder="Amount">
+    <input type="text" id="pin" placeholder="PIN">
+    <button onclick="transferMoney()">Send</button>
+    <p class="error" id="transfer-error"></p>
+    <p class="info" id="sms-alert"></p>
+    <h3>Recent Transactions</h3>
+    <div class="transactions"><ul id="transaction-list"></ul></div>
+    <h3>Balance Over Time</h3>
+    <canvas id="balance-chart"></canvas>
+    <h3>Message Admin</h3>
+    <textarea id="admin-message" placeholder="Type your message..."></textarea>
+    <button onclick="sendMessageToAdmin()">Send Message</button>
+    <p id="admin-message-status"></p>
   </div>
 
   <div id="admin-screen" class="screen hidden">
     <h2>Admin Panel</h2>
     <button onclick="logout()">Logout</button>
     <div id="admin-users"></div>
-    <div id="admin-messages">
-      <h3>User Messages</h3>
-      <ul id="message-list"></ul>
-    </div>
+    <h3>User Messages</h3>
+    <ul id="message-list"></ul>
   </div>
 
   <div class="promo">
-    <img src="promo.jpg" alt="Promo Offer">
+    <img src="background.png" alt="Promo Image">
   </div>
-
-  <script src="indexeddb.js"></script>
-  <script src="script.js"></script>
+  <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
 </body>
 </html>
